@@ -1,0 +1,83 @@
+# GPT-4o function for the whereiput.it inventory — PRIMARY integration path.
+# ---------------------------------------------------------------------------
+# Paste ONE of the two variants below into the extended_openai_conversation agent:
+#   Settings → Devices & Services → Extended OpenAI Conversation
+#     → (the "GPT-4o Minigolem" entry) → Configure → "Functions" textarea.
+#
+# Only the function SPEC (name + params + description, a few hundred tokens) ever sits in
+# GPT-4o's context. The item rows are fetched on demand when the model calls the function,
+# then summarized into the answer — the inventory is never dumped into the prompt.
+#
+# IMPORTANT — confirm the exact accepted schema for the installed component version
+# (open item in the plan). jekalmin/extended_openai_conversation supports both `rest`
+# and `script` executors; the field names below match recent releases.
+
+# =====================================================================================
+# VARIANT A — `rest` executor (simplest; no packages file needed).
+# Token is pasted directly into the header here. It is stored inside HA's integration
+# options (not world-readable). Mint a READ-only token so this can never write.
+# =====================================================================================
+- spec:
+    name: search_inventory
+    description: >-
+      Wyszukuje rzeczy w domowym inwentarzu whereiput.it i zwraca, gdzie się znajdują
+      (lokalizacja i obszar). Wywołaj, gdy użytkownik pyta gdzie coś jest, gdzie coś
+      trzyma, lub prosi o znalezienie przedmiotu (np. "gdzie jest młotek?", "gdzie mam
+      baterie AA?", "znajdź ładowarkę"). Odpowiadaj po polsku, podając nazwę przedmiotu,
+      lokalizację i obszar.
+    parameters:
+      type: object
+      properties:
+        q:
+          type: string
+          description: Nazwa szukanego przedmiotu, np. "młotek", "baterie AA", "ładowarka USB-C".
+      required:
+        - q
+  function:
+    type: rest
+    resource_template: "https://api.whereiput.it/api/v1/inventory/items/search?q={{ q | urlencode }}&per_page=5"
+    headers:
+      Authorization: "Bearer inv_PASTE_YOUR_READ_TOKEN_HERE"
+      Accept: "application/json"
+    # Trim the payload to just what the model needs to phrase an answer (keeps tokens low).
+    value_template: >-
+      {% set d = (value | from_json).data if value else [] %}
+      {% if d | length == 0 %}
+      {"found": false}
+      {% else %}
+      {"found": true, "results": [
+      {% for it in d %}
+        {"name": "{{ it.name }}",
+         "location": "{{ it.location.name if it.location else '' }}",
+         "area": "{{ it.area.name if it.area else '' }}",
+         "quantity": {{ it.quantity | int(0) }}}{{ "," if not loop.last }}
+      {% endfor %}
+      ]}
+      {% endif %}
+
+# =====================================================================================
+# VARIANT B — `script` executor (keeps the token in secrets.yaml).
+# Requires packages/whereiput_inventory.yaml (defines rest_command.whereiput_search,
+# which reads the token via !secret). Use this if you prefer not to paste the token
+# into the integration options. Delete Variant A above if you use this one.
+# =====================================================================================
+# - spec:
+#     name: search_inventory
+#     description: >-
+#       Wyszukuje rzeczy w domowym inwentarzu whereiput.it i zwraca, gdzie się znajdują.
+#       Wywołaj, gdy użytkownik pyta gdzie coś jest lub prosi o znalezienie przedmiotu.
+#     parameters:
+#       type: object
+#       properties:
+#         q:
+#           type: string
+#           description: Nazwa szukanego przedmiotu.
+#       required:
+#         - q
+#   function:
+#     type: script
+#     sequence:
+#       - service: rest_command.whereiput_search
+#         data:
+#           q: "{{ q }}"
+#         response_variable: _function_result

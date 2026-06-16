@@ -1,0 +1,46 @@
+# whereiput.it inventory — Home Assistant config package
+# ------------------------------------------------------
+# Drop-in package that wires HA to the whereiput.it scoped search API
+# (GET /api/v1/inventory/items/search). Provides:
+#   1. rest_command.whereiput_search  — the single shared HTTPS call (token from secrets.yaml)
+#   2. intent_script.WhereIsItem      — the optional local (no-LLM) "gdzie jest X" fast-path
+#
+# Enable packages once in configuration.yaml:
+#   homeassistant:
+#     packages: !include_dir_named packages
+# then copy this file to <config>/packages/whereiput_inventory.yaml and restart HA.
+#
+# The GPT-4o function-calling path does NOT need this file — see functions/search_inventory.yaml.
+# But the `script` variant of that function reuses rest_command.whereiput_search defined here.
+
+rest_command:
+  whereiput_search:
+    # per_page=3 keeps the payload tiny — a voice answer only needs the top hit or two.
+    url: "https://api.whereiput.it/api/v1/inventory/items/search?q={{ q | urlencode }}&per_page=3"
+    method: GET
+    headers:
+      Authorization: !secret whereiput_inventory_token   # "Bearer inv_..." — see secrets.example.yaml
+      Accept: "application/json"
+    # rest_command parses a JSON response into the returned `content` dict.
+
+intent_script:
+  WhereIsItem:
+    # Runs the REST call first, captures the JSON, then renders the Polish speech below.
+    action:
+      - service: rest_command.whereiput_search
+        data:
+          q: "{{ item }}"
+        response_variable: search_result
+    speech:
+      text: >-
+        {% set items = search_result.content.data if search_result is defined
+           and search_result.content is defined and search_result.content.data is defined
+           else [] %}
+        {% if items | length > 0 %}
+          {% set it = items[0] %}
+          {{ it.name }} — {{ it.location.name if it.location else 'nieznana lokalizacja' }}
+          {%- if it.area %}, {{ it.area.name }}{% endif %}.
+          {%- if it.quantity and it.quantity | int > 1 %} Sztuk: {{ it.quantity }}.{% endif %}
+        {% else %}
+          Nie znalazłem „{{ item }}".
+        {% endif %}

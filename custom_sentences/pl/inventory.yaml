@@ -1,0 +1,33 @@
+# Polish custom sentences for the local "where is X" intent.
+# Copy to <config>/custom_sentences/pl/inventory.yaml and restart HA.
+#
+# The {item} slot is a free-text wildcard: whatever the user says after "gdzie jest"
+# is captured verbatim and passed to the inventory search (Typesense fuzzy-matches it,
+# which absorbs most Polish inflection — "młotek" vs "młotka").
+#
+# NOTE: this intent only fires when the active conversation agent runs HA's built-in
+# intent recognizer first. The Minigolem pipeline's agent is GPT-4o
+# (extended_openai_conversation), so either:
+#   - test this on the local "W pełni asystent lokalny" pipeline, or
+#   - enable the agent's "use HA intents / prefer local" pass-through option.
+# Otherwise rely on the GPT-4o search_inventory function instead (functions/search_inventory.yaml).
+
+language: "pl"
+
+intents:
+  WhereIsItem:
+    data:
+      - sentences:
+          - "gdzie jest {item}"
+          - "gdzie są {item}"
+          - "gdzie mam {item}"
+          - "gdzie znajdę {item}"
+          - "gdzie leży {item}"
+          - "gdzie leżą {item}"
+          - "gdzie trzymam {item}"
+          - "znajdź {item}"
+          - "gdzie schowałem {item}"
+
+lists:
+  item:
+    wildcard: true
