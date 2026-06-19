@@ -1,0 +1,10 @@
+# Test-only dependencies for the whereiput.it Inventory HA custom integration.
+#
+# pytest-homeassistant-custom-component must match the targeted HA core
+# (hacs.json pins 2026.6.0). 0.13.339 ships Home Assistant 2026.6.x.
+# CI installs this pin; if it cannot resolve locally, leave it floating and
+# rely on CI for the matching pin.
+pytest
+pytest-homeassistant-custom-component==0.13.339
+pytest-asyncio
+aioresponses
