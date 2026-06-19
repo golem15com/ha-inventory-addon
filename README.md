@@ -35,12 +35,9 @@ whereiput.it server**.
    write or AI scope.
 3. Copy the `inv_…` secret. It is shown **only once**.
 
-> **Using the hosted SaaS instead of self-hosting?** On the hosted service the two roles live on
-> two hosts: you *mint* the token on the apex <https://whereiput.it/settings?tab=integrations>, but
-> the integration *talks to* the token API on **`api.whereiput.it`**. In that case set the Base URL
-> to `https://api.whereiput.it` and make sure your Home Assistant host can reach it (outbound 443).
-> On a self-hosted server there is just **one** host — the same origin serves both the settings page
-> and the API.
+> Your self-hosted server is a **single origin** — the same host serves both the settings page where
+> you mint the token and the API the integration talks to. There's no separate token-minting host to
+> remember: mint the token at the same Base URL you give the integration.
 
 ## Set it up
 
@@ -49,7 +46,7 @@ whereiput.it server**.
    users must change this** to their whereiput.it server's IP or hostname, e.g.
    `http://192.168.1.50:8088`. If your Home Assistant install supports mDNS you can use a `.local`
    name like `http://inventory.local:8088` (this is **not** assumed — only use it if `.local`
-   resolution works for you). To use the hosted SaaS instead, set `https://api.whereiput.it`.
+   resolution works for you).
 3. Paste your **read** token.
 4. Submit. The connection is **validated on connect** — the entry is created only after one live
    test search succeeds. A bad token is rejected with *"Invalid token."*; an unreachable server
@@ -60,8 +57,8 @@ whereiput.it server**.
 > (`10.x.x.x`, `172.16–31.x.x`, `192.168.x.x`). For any **public** host the integration requires
 > `https://` so your bearer token is never sent in plaintext over the internet.
 
-No `secrets.yaml`, no YAML editing. You can add **multiple entries** (e.g. your own self-hosted
-server plus the hosted `whereiput.it`, or two accounts).
+No `secrets.yaml`, no YAML editing. You can add **multiple entries** (e.g. two different servers, or
+two accounts).
 
 ## How you search
 
@@ -96,8 +93,7 @@ pieces. **The integration is the single supported path going forward.**
 ## Verify
 
 1. **API smoke test** (no Home Assistant needed) — confirms the token + endpoint are live. Use the
-   **same Base URL you configured** (your self-hosted server below, or `https://api.whereiput.it`
-   for the hosted service):
+   **same Base URL you configured** (your self-hosted server, shown as `localhost:8088` below):
    ```bash
    curl -H "Authorization: Bearer inv_<your_read_token>" \
      "http://localhost:8088/api/v1/inventory/items/search?q=mlotek"

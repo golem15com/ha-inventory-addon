@@ -29,7 +29,7 @@ async def test_setup_entry_stores_client_then_unload_pops(hass: HomeAssistant) -
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
-            CONF_BASE_URL: "https://api.whereiput.it",
+            CONF_BASE_URL: "https://inventory.example.com",
             CONF_TOKEN: "inv_valid",
         },
         options={},

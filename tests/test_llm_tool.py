@@ -28,7 +28,7 @@ async def test_search_tool_returns_results(
     mock_aiohttp.get(SEARCH_URL, payload=mock_search_response)
     client = InventoryClient(
         aiohttp_client.async_get_clientsession(hass),
-        "https://api.whereiput.it",
+        "https://inventory.example.com",
         "inv_valid",
     )
     tool = llm_api.SearchInventoryTool(client)
@@ -51,7 +51,7 @@ async def test_search_tool_client_error_raises_haerror(
     mock_aiohttp.get(SEARCH_URL, exception=ClientError())
     client = InventoryClient(
         aiohttp_client.async_get_clientsession(hass),
-        "https://api.whereiput.it",
+        "https://inventory.example.com",
         "inv_valid",
     )
     tool = llm_api.SearchInventoryTool(client)
@@ -70,7 +70,7 @@ async def test_tool_name_and_minimal_fields(
     mock_aiohttp.get(SEARCH_URL, payload=mock_search_response)
     client = InventoryClient(
         aiohttp_client.async_get_clientsession(hass),
-        "https://api.whereiput.it",
+        "https://inventory.example.com",
         "inv_valid",
     )
     tool = llm_api.SearchInventoryTool(client)
@@ -98,7 +98,7 @@ async def test_llm_api_registered_and_unregistered_with_entry(
 
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={"base_url": "https://api.whereiput.it", "token": "inv_valid"},
+        data={"base_url": "https://inventory.example.com", "token": "inv_valid"},
     )
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id)

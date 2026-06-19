@@ -1,6 +1,6 @@
 """Unit tests for InventoryClient (the one piece of real custom runtime code).
 
-Stubs the two frozen api.whereiput.it endpoints with aioresponses and asserts
+Stubs the two whereiput.it inventory API endpoints with aioresponses and asserts
 URL/params/headers, response mapping, error mapping, trailing-slash
 normalization, single + multi area filtering, and that the token is never
 logged.
@@ -33,7 +33,7 @@ async def client(hass):
     from homeassistant.helpers import aiohttp_client
 
     session = aiohttp_client.async_get_clientsession(hass)
-    return InventoryClient(session, "https://api.whereiput.it", TOKEN)
+    return InventoryClient(session, "https://inventory.example.com", TOKEN)
 
 
 # --- search() happy path --------------------------------------------------
@@ -146,7 +146,7 @@ async def test_base_url_trailing_slash_normalized(hass, mock_aiohttp) -> None:
     from homeassistant.helpers import aiohttp_client
 
     session = aiohttp_client.async_get_clientsession(hass)
-    client = InventoryClient(session, "https://api.whereiput.it/", TOKEN)
+    client = InventoryClient(session, "https://inventory.example.com/", TOKEN)
     mock_aiohttp.get(SEARCH_URL, payload=mock_search_response)
     await client.search("młotek")
 

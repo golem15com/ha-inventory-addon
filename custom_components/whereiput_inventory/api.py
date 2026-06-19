@@ -1,4 +1,4 @@
-"""Async aiohttp client for the frozen api.whereiput.it inventory API.
+"""Async aiohttp client for the whereiput.it inventory API.
 
 This is the integration's only real custom runtime code. Every surface (config
 flow, options flow, service, LLM tool, conversation entity) calls through it.

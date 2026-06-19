@@ -31,7 +31,7 @@ async def _setup_entry(hass: HomeAssistant, options=None):
 
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={"base_url": "https://api.whereiput.it", "token": "inv_valid"},
+        data={"base_url": "https://inventory.example.com", "token": "inv_valid"},
         options=options or {},
     )
     entry.add_to_hass(hass)

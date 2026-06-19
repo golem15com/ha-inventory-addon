@@ -73,11 +73,11 @@ async def test_user_flow_success_creates_entry(
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_BASE_URL: "https://api.whereiput.it", CONF_TOKEN: "inv_valid"},
+        {CONF_BASE_URL: "https://inventory.example.com", CONF_TOKEN: "inv_valid"},
     )
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["data"] == {
-        CONF_BASE_URL: "https://api.whereiput.it",
+        CONF_BASE_URL: "https://inventory.example.com",
         CONF_TOKEN: "inv_valid",
     }
 
@@ -93,7 +93,7 @@ async def test_user_flow_rejects_non_http_scheme_before_network(
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_BASE_URL: "ftp://api.whereiput.it", CONF_TOKEN: "inv_valid"},
+        {CONF_BASE_URL: "ftp://inventory.example.com", CONF_TOKEN: "inv_valid"},
     )
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"]["base"] == "invalid_url"
@@ -189,7 +189,7 @@ async def test_user_flow_invalid_auth(hass: HomeAssistant, mock_aiohttp) -> None
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_BASE_URL: "https://api.whereiput.it", CONF_TOKEN: "inv_bad"},
+        {CONF_BASE_URL: "https://inventory.example.com", CONF_TOKEN: "inv_bad"},
     )
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"]["base"] == "invalid_auth"
@@ -203,7 +203,7 @@ async def test_user_flow_cannot_connect(hass: HomeAssistant, mock_aiohttp) -> No
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_BASE_URL: "https://api.whereiput.it", CONF_TOKEN: "inv_x"},
+        {CONF_BASE_URL: "https://inventory.example.com", CONF_TOKEN: "inv_x"},
     )
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"]["base"] == "cannot_connect"
@@ -221,7 +221,7 @@ async def test_two_distinct_pairs_both_create_entries(
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_BASE_URL: "https://api.whereiput.it", CONF_TOKEN: "inv_one"},
+        {CONF_BASE_URL: "https://inventory.example.com", CONF_TOKEN: "inv_one"},
     )
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
@@ -231,7 +231,7 @@ async def test_two_distinct_pairs_both_create_entries(
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_BASE_URL: "https://api.whereiput.it", CONF_TOKEN: "inv_two"},
+        {CONF_BASE_URL: "https://inventory.example.com", CONF_TOKEN: "inv_two"},
     )
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
@@ -249,7 +249,7 @@ async def test_identical_pair_aborts_already_configured(
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_BASE_URL: "https://api.whereiput.it", CONF_TOKEN: "inv_dup"},
+        {CONF_BASE_URL: "https://inventory.example.com", CONF_TOKEN: "inv_dup"},
     )
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
@@ -258,7 +258,7 @@ async def test_identical_pair_aborts_already_configured(
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_BASE_URL: "https://api.whereiput.it", CONF_TOKEN: "inv_dup"},
+        {CONF_BASE_URL: "https://inventory.example.com", CONF_TOKEN: "inv_dup"},
     )
     assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"
@@ -276,7 +276,7 @@ async def test_unique_id_does_not_store_raw_token(
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_BASE_URL: "https://api.whereiput.it", CONF_TOKEN: "inv_secret_token"},
+        {CONF_BASE_URL: "https://inventory.example.com", CONF_TOKEN: "inv_secret_token"},
     )
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     entry = hass.config_entries.async_entries(DOMAIN)[0]

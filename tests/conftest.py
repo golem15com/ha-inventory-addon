@@ -1,7 +1,7 @@
 """Shared pytest fixtures for the whereiput.it Inventory integration tests.
 
 Uses pytest-homeassistant-custom-component (PHACC) for the Home Assistant test
-harness and aioresponses to mock the frozen api.whereiput.it endpoints.
+harness and aioresponses to mock the whereiput.it inventory API endpoints.
 """
 
 import re
@@ -14,7 +14,7 @@ pytest_plugins = "pytest_homeassistant_custom_component"
 
 # --- Test constants -------------------------------------------------------
 
-BASE_URL = "https://api.whereiput.it"
+BASE_URL = "https://inventory.example.com"
 TOKEN = "inv_testtoken1234567890"
 
 # Path-only string forms (used for readability / substring assertions).
@@ -24,10 +24,10 @@ AREAS_PATH = "api/v1/inventory/me/areas"
 # Regex matchers so aioresponses matches regardless of the query string
 # (aiohttp params= appends a query, which exact-URL matching would miss).
 SEARCH_URL = re.compile(
-    r"https://api\.whereiput\.it/api/v1/inventory/items/search(\?.*)?$"
+    r"https://inventory\.example\.com/api/v1/inventory/items/search(\?.*)?$"
 )
 AREAS_URL = re.compile(
-    r"https://api\.whereiput\.it/api/v1/inventory/me/areas(\?.*)?$"
+    r"https://inventory\.example\.com/api/v1/inventory/me/areas(\?.*)?$"
 )
 
 # One row matching the VERIFIED server contract
