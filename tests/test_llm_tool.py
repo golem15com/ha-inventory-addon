@@ -59,6 +59,56 @@ async def test_search_tool_client_error_raises_haerror(
         await tool.async_call(hass, _tool_input("młotek"), _llm_context())
 
 
+async def test_tool_name_and_minimal_fields(
+    hass: HomeAssistant, mock_aiohttp
+) -> None:
+    """The tool advertises name=search_inventory and returns only minimal fields."""
+    from homeassistant.helpers import aiohttp_client
+
+    from custom_components.whereiput_inventory.api import InventoryClient
+
+    mock_aiohttp.get(SEARCH_URL, payload=mock_search_response)
+    client = InventoryClient(
+        aiohttp_client.async_get_clientsession(hass),
+        "https://api.whereiput.it",
+        "inv_valid",
+    )
+    tool = llm_api.SearchInventoryTool(client)
+    assert tool.name == "search_inventory"
+
+    result = await tool.async_call(hass, _tool_input("młotek"), _llm_context())
+    first = result["results"][0]
+    # Only the four minimal fields cross to the agent — never the raw row.
+    assert set(first.keys()) == {"name", "location", "area", "quantity"}
+
+
+async def test_llm_api_registered_and_unregistered_with_entry(
+    hass: HomeAssistant,
+) -> None:
+    """The llm.API is registered on setup and unregistered on unload."""
+    from homeassistant.helpers import llm
+
+    from custom_components.whereiput_inventory.const import DOMAIN
+    from pytest_homeassistant_custom_component.common import MockConfigEntry
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"base_url": "https://api.whereiput.it", "token": "inv_valid"},
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    api_id = f"whereiput-{entry.entry_id}"
+    apis = llm.async_get_apis(hass)
+    assert any(a.id == api_id for a in apis)
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+    apis = llm.async_get_apis(hass)
+    assert not any(a.id == api_id for a in apis)
+
+
 def _tool_input(q: str):
     from homeassistant.helpers import llm
 
