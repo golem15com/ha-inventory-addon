@@ -27,26 +27,35 @@ no `secrets.yaml`, no third-party conversation component.
 The integration authenticates with a personal **read** API token, minted on **your own
 whereiput.it server**.
 
-1. Open your server's **Settings → Integrations** tab — on a default self-host this is
-   <http://localhost:8088/settings?tab=integrations> (or the same path on whatever IP/hostname your
-   server runs on, e.g. `http://192.168.1.50:8088/settings?tab=integrations`). It's the **same base
-   URL you'll give the integration**, just with the `/settings?tab=integrations` page open.
+1. Open your server's web UI **Settings → Integrations** tab. On the docker-compose stack in this
+   repo that's <http://localhost:8088/settings?tab=integrations> (or the same path on whatever
+   IP/hostname your server runs on, e.g. `http://192.168.1.50:8088/settings?tab=integrations`).
 2. Create a token: name it `Home Assistant`, **scope `read`** — voice search never needs
    write or AI scope.
 3. Copy the `inv_…` secret. It is shown **only once**.
 
-> Your self-hosted server is a **single origin** — the same host serves both the settings page where
-> you mint the token and the API the integration talks to. There's no separate token-minting host to
-> remember: mint the token at the same Base URL you give the integration.
+> **Which host is the Base URL?** The integration talks to the API at `{Base URL}/api/v1/inventory`,
+> which is **not** always the same host as the web UI where you minted the token:
+>
+> - **Single-origin** (the docker-compose stack here): one host serves both the web UI and the API,
+>   so the Base URL is just your server's `host:port` — the default `http://localhost:8088`.
+> - **Split host** (anything that puts the API on its own subdomain, e.g. the web UI on
+>   `yourdomain` and the API on `api.yourdomain`): set the Base URL to the **API** host
+>   (`https://api.yourdomain`), *not* the web-UI host — the web-UI host serves the SPA and will
+>   reject the integration's API calls.
+>
+> Not sure which you have? Run the smoke test in [Verify](#verify) against each candidate host — the
+> one that returns **JSON** from `/api/v1/inventory/items/search` is your Base URL.
 
 ## Set it up
 
 1. **Settings → Devices & Services → Add Integration**, search for **"whereiput.it Inventory"**.
-2. The **Base URL** is prefilled to `http://localhost:8088` — the default self-host port. **Most
-   users must change this** to their whereiput.it server's IP or hostname, e.g.
-   `http://192.168.1.50:8088`. If your Home Assistant install supports mDNS you can use a `.local`
-   name like `http://inventory.local:8088` (this is **not** assumed — only use it if `.local`
-   resolution works for you).
+2. The **Base URL** is prefilled to `http://localhost:8088` — the docker-compose default. **Most
+   users must change this** to the **API host** of their whereiput.it server (see *"Which host is
+   the Base URL?"* above): an IP/hostname like `http://192.168.1.50:8088` for a single-origin stack,
+   or an API subdomain like `https://api.yourdomain` for a split-host deployment. If your Home
+   Assistant install supports mDNS you can use a `.local` name like `http://inventory.local:8088`
+   (this is **not** assumed — only use it if `.local` resolution works for you).
 3. Paste your **read** token.
 4. Submit. The connection is **validated on connect** — the entry is created only after one live
    test search succeeds. A bad token is rejected with *"Invalid token."*; an unreachable server
