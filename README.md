@@ -10,6 +10,12 @@ on demand and discards them after answering.
 Install it through **HACS** as a custom repository, then set it up entirely in the UI — no YAML,
 no `secrets.yaml`, no third-party conversation component.
 
+> **You need a running whereiput.it server first.** This integration is a client — it connects to a
+> whereiput.it instance **you host yourself**. To deploy one, see the main project:
+> **[golem15com/wn-inventory-app](https://github.com/golem15com/wn-inventory-app)**
+> ([self-hosting guide](https://github.com/golem15com/wn-inventory-app/blob/master/docs/SELF-HOSTING.md)).
+> Already running it? Continue below.
+
 ## Install via HACS (custom repository)
 
 1. In Home Assistant, open **HACS**.
