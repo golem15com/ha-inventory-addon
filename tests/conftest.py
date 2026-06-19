@@ -4,6 +4,8 @@ Uses pytest-homeassistant-custom-component (PHACC) for the Home Assistant test
 harness and aioresponses to mock the frozen api.whereiput.it endpoints.
 """
 
+import re
+
 import pytest
 from aioresponses import aioresponses
 
@@ -15,8 +17,18 @@ pytest_plugins = "pytest_homeassistant_custom_component"
 BASE_URL = "https://api.whereiput.it"
 TOKEN = "inv_testtoken1234567890"
 
-SEARCH_URL = f"{BASE_URL}/api/v1/inventory/items/search"
-AREAS_URL = f"{BASE_URL}/api/v1/inventory/me/areas"
+# Path-only string forms (used for readability / substring assertions).
+SEARCH_PATH = "api/v1/inventory/items/search"
+AREAS_PATH = "api/v1/inventory/me/areas"
+
+# Regex matchers so aioresponses matches regardless of the query string
+# (aiohttp params= appends a query, which exact-URL matching would miss).
+SEARCH_URL = re.compile(
+    r"https://api\.whereiput\.it/api/v1/inventory/items/search(\?.*)?$"
+)
+AREAS_URL = re.compile(
+    r"https://api\.whereiput\.it/api/v1/inventory/me/areas(\?.*)?$"
+)
 
 # One row matching the VERIFIED server contract
 # (ItemApiController.php:175-183): name, location:{name}, area:{name}, quantity.
