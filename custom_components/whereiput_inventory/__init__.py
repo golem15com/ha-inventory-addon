@@ -11,10 +11,16 @@ from __future__ import annotations
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import llm
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .api import InventoryClient
-from .const import CONF_BASE_URL, CONF_TOKEN, DOMAIN
+from .const import CONF_AREAS, CONF_BASE_URL, CONF_TOKEN, DOMAIN
+from .llm_api import build_api
+from .services import (
+    async_register_search_service,
+    async_unregister_search_service,
+)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -24,19 +30,31 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.data[CONF_BASE_URL],
         entry.data[CONF_TOKEN],
     )
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {"client": client}
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
+        "client": client,
+        # The per-entry area filter NARROWS scope only (D-08); [] = no filter.
+        "areas": entry.options.get(CONF_AREAS) or None,
+    }
 
     # Reload the entry when its options (e.g. the area filter) change.
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
     # surfaces registered in Plan 04 (service, LLM tool, conversation entity)
+    # 1. The search service (idempotent across entries; removed on last unload).
+    async_register_search_service(hass)
+    # 2. The agent-agnostic LLM API; unregistered with the entry.
+    unreg = llm.async_register_api(hass, build_api(hass, entry))
+    entry.async_on_unload(unreg)
+    # 3. The offline EN+PL ConversationEntity is wired in Task 2.
 
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Drop the per-entry client on unload."""
+    """Drop the per-entry client + surfaces on unload."""
     hass.data.get(DOMAIN, {}).pop(entry.entry_id, None)
+    # Remove the shared service only once the last entry is gone.
+    async_unregister_search_service(hass)
     return True
 
 

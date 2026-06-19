@@ -12,6 +12,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.core import HomeAssistant, SupportsResponse
+from homeassistant.setup import async_setup_component
 
 from custom_components.whereiput_inventory.const import CONF_AREAS, DOMAIN
 
@@ -21,6 +22,12 @@ from .conftest import SEARCH_URL, mock_search_response
 async def _setup_entry(hass: HomeAssistant, options=None):
     """Set up a config entry and return it."""
     from pytest_homeassistant_custom_component.common import MockConfigEntry
+
+    # The manifest declares dependencies: ["conversation"]; set it up (and its
+    # own homeassistant dep) before the entry so HA can resolve the dep tree.
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "conversation", {})
+    await hass.async_block_till_done()
 
     entry = MockConfigEntry(
         domain=DOMAIN,

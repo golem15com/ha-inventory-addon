@@ -1,0 +1,26 @@
+# whereiput.it Inventory services.
+#
+# search returns a structured response — call it with `response_variable` (or
+# Developer Tools → Actions "Response"). It NEVER controls or exposes entities;
+# inventory rows are returned to the caller only, never persisted.
+#
+# Multi-entry note: if more than one whereiput.it account is configured, the
+# service uses the most-recently set-up entry's client (and that entry's area
+# filter). For per-account targeting, prefer the per-entry LLM tool /
+# conversation agent, or configure a single entry.
+search:
+  fields:
+    q:
+      required: true
+      example: "młotek"
+      selector:
+        text:
+    per_page:
+      required: false
+      default: 5
+      example: 5
+      selector:
+        number:
+          min: 1
+          max: 50
+          mode: box

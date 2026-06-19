@@ -87,9 +87,14 @@ async def test_llm_api_registered_and_unregistered_with_entry(
 ) -> None:
     """The llm.API is registered on setup and unregistered on unload."""
     from homeassistant.helpers import llm
+    from homeassistant.setup import async_setup_component
 
     from custom_components.whereiput_inventory.const import DOMAIN
     from pytest_homeassistant_custom_component.common import MockConfigEntry
+
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "conversation", {})
+    await hass.async_block_till_done()
 
     entry = MockConfigEntry(
         domain=DOMAIN,
