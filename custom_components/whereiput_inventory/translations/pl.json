@@ -13,7 +13,8 @@
     "error": {
       "invalid_auth": "Nieprawidłowy token.",
       "cannot_connect": "Nie można połączyć się z serwerem.",
-      "invalid_url": "Adres bazowy musi zaczynać się od https://."
+      "invalid_url": "Adres bazowy musi zaczynać się od http:// lub https://.",
+      "insecure_url": "http:// jest dozwolone tylko dla adresu lokalnego lub prywatnego (np. localhost, nazwa .local lub adres 192.168.x.x). Dla hosta publicznego użyj https://."
     },
     "abort": {
       "already_configured": "Ten serwer/token jest już skonfigurowany."

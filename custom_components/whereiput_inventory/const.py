@@ -2,8 +2,12 @@
 
 DOMAIN = "whereiput_inventory"
 
-# The token API lives on the api. host; the SPA / token-minting UI is on the apex.
-DEFAULT_URL = "https://api.whereiput.it"
+# Self-host-first default: prefill the local docker-compose APP_PORT (8088).
+# The token API path is ``/api/v1/inventory``. Most users must change this to
+# their own whereiput.it server's IP/hostname. The hosted SaaS lives at
+# ``https://api.whereiput.it`` (use that if you point at the hosted service).
+# http:// is accepted only for local/private hosts; public hosts require https.
+DEFAULT_URL = "http://localhost:8088"
 
 CONF_BASE_URL = "base_url"
 CONF_TOKEN = "token"

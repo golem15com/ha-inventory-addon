@@ -26,28 +26,39 @@ no `secrets.yaml`, no third-party conversation component.
 
 The integration authenticates with a personal **read** API token.
 
-1. Open <https://whereiput.it/settings?tab=integrations> (the SPA / token-minting UI lives on the
-   **apex** `whereiput.it`).
+1. Open your whereiput.it server's **Settings → Integrations** tab and create a token. On the
+   hosted service this is <https://whereiput.it/settings?tab=integrations> (the SPA / token-minting
+   UI lives on the **apex** `whereiput.it`); on a self-hosted server it is the same path on your own
+   host.
 2. Create a token: name it `Home Assistant`, **scope `read`** — voice search never needs
    write or AI scope.
 3. Copy the `inv_…` secret. It is shown **only once**.
 
-> **Two hosts, by design.** You *mint* the token on the apex `whereiput.it`, but the integration
-> *talks to* the token API on **`api.whereiput.it`** — that host is prefilled for you in the next
-> step. Make sure your Home Assistant host can reach `https://api.whereiput.it` (outbound 443).
+> **Hosted service: two hosts, by design.** If you point the integration at the hosted SaaS, you
+> *mint* the token on the apex `whereiput.it`, but the integration *talks to* the token API on
+> **`api.whereiput.it`**. Set the Base URL to `https://api.whereiput.it` in that case and make sure
+> your Home Assistant host can reach it (outbound 443).
 
 ## Set it up
 
 1. **Settings → Devices & Services → Add Integration**, search for **"whereiput.it Inventory"**.
-2. The **Base URL** is prefilled to `https://api.whereiput.it` (edit it only if you self-host
-   the server).
+2. The **Base URL** is prefilled to `http://localhost:8088` — the default self-host port. **Most
+   users must change this** to their whereiput.it server's IP or hostname, e.g.
+   `http://192.168.1.50:8088`. If your Home Assistant install supports mDNS you can use a `.local`
+   name like `http://inventory.local:8088` (this is **not** assumed — only use it if `.local`
+   resolution works for you). To use the hosted SaaS instead, set `https://api.whereiput.it`.
 3. Paste your **read** token.
 4. Submit. The connection is **validated on connect** — the entry is created only after one live
    test search succeeds. A bad token is rejected with *"Invalid token."*; an unreachable server
    with *"Could not reach the server."*
 
-No `secrets.yaml`, no YAML editing. You can add **multiple entries** (e.g. the hosted
-`whereiput.it` plus your own self-hosted server, or two accounts).
+> **http is allowed only for local/private addresses.** Plain `http://` is accepted for
+> `localhost`, `127.0.0.1`, any `*.local` hostname, and the private LAN ranges
+> (`10.x.x.x`, `172.16–31.x.x`, `192.168.x.x`). For any **public** host the integration requires
+> `https://` so your bearer token is never sent in plaintext over the internet.
+
+No `secrets.yaml`, no YAML editing. You can add **multiple entries** (e.g. your own self-hosted
+server plus the hosted `whereiput.it`, or two accounts).
 
 ## How you search
 

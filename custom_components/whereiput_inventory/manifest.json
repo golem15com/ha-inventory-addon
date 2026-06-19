@@ -1,7 +1,7 @@
 {
   "domain": "whereiput_inventory",
   "name": "whereiput.it Inventory",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "documentation": "https://github.com/golem15com/ha-inventory-addon",
   "issue_tracker": "https://github.com/golem15com/ha-inventory-addon/issues",
   "codeowners": ["@golem15com"],

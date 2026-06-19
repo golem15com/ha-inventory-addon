@@ -1,11 +1,14 @@
 """Config + options flow for the whereiput.it Inventory integration.
 
 Config flow (validate-on-connect, D-07): a single user step prefills the base
-URL to ``https://api.whereiput.it`` and takes a read token. The base URL must
-be ``https://`` (rejected as ``invalid_url`` BEFORE any network call — MITM
-mitigation T-17-07). One live ``search`` validates the token: a 200 creates the
-entry, a 401/403 surfaces ``invalid_auth`` and a connection failure surfaces
-``cannot_connect``.
+URL to ``http://localhost:8088`` (self-host-first) and takes a read token.
+URL policy (MITM mitigation T-17-07): the scheme must be ``http`` or ``https``
+(anything else is rejected as ``invalid_url`` BEFORE any network call). ``http``
+is allowed ONLY for local/private hosts (localhost, 127.0.0.0/8, ::1, ``*.local``,
+and the RFC1918 private ranges); for any public host ``http`` is rejected as
+``insecure_url`` so a bearer token never rides plaintext to a public host.
+One live ``search`` validates the token: a 200 creates the entry, a 401/403
+surfaces ``invalid_auth`` and a connection failure surfaces ``cannot_connect``.
 
 Multiple entries are allowed (D-06): the unique_id is a HASH of base_url+token
 (never the raw token — T-17-08), so distinct pairs each create an entry while an
@@ -18,7 +21,9 @@ an optional area filter (default = none).
 from __future__ import annotations
 
 import hashlib
+import ipaddress
 from typing import Any
+from urllib.parse import urlsplit
 
 import voluptuous as vol
 
@@ -43,6 +48,34 @@ def _entry_unique_id(base_url: str, token: str) -> str:
     return digest
 
 
+def _is_local_or_private_host(host: str) -> bool:
+    """True if ``host`` is a local/private address safe to reach over plain http.
+
+    Local/private = ``localhost``, any ``*.local`` hostname (mDNS), loopback
+    (127.0.0.0/8, ::1), or an RFC1918 private IPv4 range
+    (10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16) and IPv6 private/link-local.
+    Used to gate the http-only-for-local policy (T-17-07).
+    """
+    if not host:
+        return False
+
+    host = host.lower()
+    # Strip an IPv6 literal's surrounding brackets, e.g. "[::1]".
+    if host.startswith("[") and host.endswith("]"):
+        host = host[1:-1]
+
+    if host == "localhost" or host.endswith(".local"):
+        return True
+
+    try:
+        ip = ipaddress.ip_address(host)
+    except ValueError:
+        # A non-IP, non-local hostname (e.g. a public domain) is NOT local.
+        return False
+
+    return ip.is_loopback or ip.is_private or ip.is_link_local
+
+
 class WhereIPutConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle the UI config flow for whereiput.it Inventory."""
 
@@ -58,9 +91,20 @@ class WhereIPutConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             base_url = user_input[CONF_BASE_URL].rstrip("/")
             token = user_input[CONF_TOKEN]
 
-            # MITM mitigation (T-17-07): reject non-https BEFORE any network call.
-            if not base_url.startswith("https://"):
+            # URL policy (T-17-07), enforced BEFORE any network call:
+            #   - scheme must be http or https (else invalid_url);
+            #   - https is always allowed;
+            #   - http is allowed ONLY for a local/private host; for a public
+            #     host http is rejected as insecure_url (no plaintext bearer
+            #     token to a public host).
+            parts = urlsplit(base_url)
+            scheme = parts.scheme.lower()
+            if scheme not in ("http", "https"):
                 errors["base"] = "invalid_url"
+            elif scheme == "http" and not _is_local_or_private_host(
+                parts.hostname or ""
+            ):
+                errors["base"] = "insecure_url"
             else:
                 client = InventoryClient(
                     async_get_clientsession(self.hass), base_url, token

@@ -24,6 +24,7 @@ REQUIRED_KEY_PATHS = {
     "config.error.invalid_auth",
     "config.error.cannot_connect",
     "config.error.invalid_url",
+    "config.error.insecure_url",
     "config.abort.already_configured",
     "options.step.init.title",
     "options.step.init.data.areas",

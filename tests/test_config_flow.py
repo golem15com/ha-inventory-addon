@@ -1,15 +1,18 @@
-# GREEN in Plan 03 (was Wave 0 RED in Plan 02)
-"""Config flow tests (validate-on-connect, https-only, multi-entry).
+# GREEN in Plan 03 (was Wave 0 RED in Plan 02); URL policy updated in Plan 05.
+"""Config flow tests (validate-on-connect, self-host-first URL policy, multi-entry).
 
-Asserts every <behavior> bullet of Plan 03 Task 1:
+Asserts every <behavior> bullet of Plan 03 Task 1 + the Plan-05 URL policy:
 - the user form is shown with no input,
-- a non-https base_url is rejected as invalid_url BEFORE any network call,
+- a base_url with a non-http(s) scheme is rejected as invalid_url BEFORE any network call,
+- http:// to a PUBLIC host is rejected as insecure_url BEFORE any network call,
+- http:// to a LOCAL/PRIVATE host (localhost, *.local, RFC1918 IP) is ACCEPTED,
 - a valid https URL + a 200 search creates the entry,
 - a 401 maps to invalid_auth, a ClientError maps to cannot_connect,
 - two distinct base_url+token pairs both create entries (D-06),
 - an identical pair aborts as already_configured (unique_id de-dupe, token hashed).
 """
 
+import re
 from unittest.mock import patch
 
 import pytest
@@ -79,10 +82,10 @@ async def test_user_flow_success_creates_entry(
     }
 
 
-async def test_user_flow_rejects_non_https_before_network(
+async def test_user_flow_rejects_non_http_scheme_before_network(
     hass: HomeAssistant, mock_aiohttp
 ) -> None:
-    """A non-https base_url is rejected as invalid_url BEFORE any network call."""
+    """A non-http(s) scheme is rejected as invalid_url BEFORE any network call."""
     # No mock registered: if the flow made a network call it would raise a
     # connection error (aioresponses with no match), proving no call happened.
     result = await hass.config_entries.flow.async_init(
@@ -90,12 +93,92 @@ async def test_user_flow_rejects_non_https_before_network(
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_BASE_URL: "http://api.whereiput.it", CONF_TOKEN: "inv_valid"},
+        {CONF_BASE_URL: "ftp://api.whereiput.it", CONF_TOKEN: "inv_valid"},
     )
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"]["base"] == "invalid_url"
     # aioresponses recorded zero requests.
     assert not mock_aiohttp.requests
+
+
+async def test_user_flow_rejects_http_public_host_before_network(
+    hass: HomeAssistant, mock_aiohttp
+) -> None:
+    """http:// to a PUBLIC host is rejected as insecure_url BEFORE any call (T-17-07)."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_BASE_URL: "http://example.com", CONF_TOKEN: "inv_valid"},
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["errors"]["base"] == "insecure_url"
+    # No plaintext bearer token left the host.
+    assert not mock_aiohttp.requests
+
+
+async def test_user_flow_accepts_http_localhost(
+    hass: HomeAssistant, mock_aiohttp
+) -> None:
+    """http://localhost (self-host default) is accepted and creates an entry."""
+    mock_aiohttp.get(
+        re.compile(
+            r"http://localhost:8088/api/v1/inventory/items/search(\?.*)?$"
+        ),
+        payload=mock_search_response,
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_BASE_URL: "http://localhost:8088", CONF_TOKEN: "inv_local"},
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_BASE_URL] == "http://localhost:8088"
+
+
+async def test_user_flow_accepts_http_private_ip(
+    hass: HomeAssistant, mock_aiohttp
+) -> None:
+    """http:// to an RFC1918 private IP (192.168.x.x) is accepted."""
+    mock_aiohttp.get(
+        re.compile(
+            r"http://192\.168\.1\.50:8088/api/v1/inventory/items/search(\?.*)?$"
+        ),
+        payload=mock_search_response,
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_BASE_URL: "http://192.168.1.50:8088", CONF_TOKEN: "inv_lan"},
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_BASE_URL] == "http://192.168.1.50:8088"
+
+
+async def test_user_flow_accepts_http_mdns_local(
+    hass: HomeAssistant, mock_aiohttp
+) -> None:
+    """http:// to a *.local mDNS hostname is accepted."""
+    mock_aiohttp.get(
+        re.compile(
+            r"http://inventory\.local:8088/api/v1/inventory/items/search(\?.*)?$"
+        ),
+        payload=mock_search_response,
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_BASE_URL: "http://inventory.local:8088", CONF_TOKEN: "inv_mdns"},
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_BASE_URL] == "http://inventory.local:8088"
 
 
 async def test_user_flow_invalid_auth(hass: HomeAssistant, mock_aiohttp) -> None:
