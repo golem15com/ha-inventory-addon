@@ -1,0 +1,47 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Połącz z whereiput.it",
+        "description": "Wygeneruj token odczytu na whereiput.it → Ustawienia → Integracje.",
+        "data": {
+          "base_url": "Adres bazowy",
+          "token": "Token API (odczyt)"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Nieprawidłowy token.",
+      "cannot_connect": "Nie można połączyć się z serwerem.",
+      "invalid_url": "Adres bazowy musi zaczynać się od https://."
+    },
+    "abort": {
+      "already_configured": "Ten serwer/token jest już skonfigurowany."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Opcje wyszukiwania",
+        "data": {
+          "areas": "Ogranicz wyszukiwanie do tych obszarów (opcjonalnie)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Nie można połączyć się z serwerem."
+    }
+  },
+  "services": {
+    "search": {
+      "name": "Szukaj w spisie",
+      "description": "Znajdź, gdzie leży dana rzecz.",
+      "fields": {
+        "q": {
+          "name": "Zapytanie",
+          "description": "Nazwa rzeczy do wyszukania."
+        }
+      }
+    }
+  }
+}

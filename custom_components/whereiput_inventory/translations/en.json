@@ -1,0 +1,47 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to whereiput.it",
+        "description": "Mint a read token at whereiput.it → Settings → Integrations.",
+        "data": {
+          "base_url": "Base URL",
+          "token": "Read API token"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Invalid token.",
+      "cannot_connect": "Could not reach the server.",
+      "invalid_url": "Base URL must start with https://."
+    },
+    "abort": {
+      "already_configured": "This server/token is already set up."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Search options",
+        "data": {
+          "areas": "Limit search to these areas (optional)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Could not reach the server."
+    }
+  },
+  "services": {
+    "search": {
+      "name": "Search inventory",
+      "description": "Find where an item is stored.",
+      "fields": {
+        "q": {
+          "name": "Query",
+          "description": "Item name to search for."
+        }
+      }
+    }
+  }
+}
