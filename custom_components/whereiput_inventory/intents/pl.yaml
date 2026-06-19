@@ -1,0 +1,26 @@
+# Polish "gdzie jest X" sentences for the offline WhereIsItem intent.
+#
+# Ported verbatim from legacy/custom_sentences/pl/inventory.yaml. The {item}
+# slot is a free-text wildcard captured verbatim and passed to the inventory
+# search (Typesense fuzzy-matching absorbs most Polish inflection — "młotek" vs
+# "młotka"). Matched in-process by the ConversationEntity via hassil.
+
+language: "pl"
+
+intents:
+  WhereIsItem:
+    data:
+      - sentences:
+          - "gdzie jest {item}"
+          - "gdzie są {item}"
+          - "gdzie mam {item}"
+          - "gdzie znajdę {item}"
+          - "gdzie leży {item}"
+          - "gdzie leżą {item}"
+          - "gdzie trzymam {item}"
+          - "znajdź {item}"
+          - "gdzie schowałem {item}"
+
+lists:
+  item:
+    wildcard: true

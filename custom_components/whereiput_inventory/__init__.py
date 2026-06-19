@@ -10,6 +10,7 @@ service, LLM tool and conversation entity onto the per-entry client at the
 from __future__ import annotations
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import llm
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -21,6 +22,10 @@ from .services import (
     async_register_search_service,
     async_unregister_search_service,
 )
+
+# The offline EN+PL ConversationEntity is the integration's ONLY entity (D-01);
+# it controls no devices.
+PLATFORMS: list[Platform] = [Platform.CONVERSATION]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -45,13 +50,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # 2. The agent-agnostic LLM API; unregistered with the entry.
     unreg = llm.async_register_api(hass, build_api(hass, entry))
     entry.async_on_unload(unreg)
-    # 3. The offline EN+PL ConversationEntity is wired in Task 2.
+    # 3. The offline EN+PL ConversationEntity (the integration's only entity).
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Drop the per-entry client + surfaces on unload."""
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if not unload_ok:
+        return False
+
     hass.data.get(DOMAIN, {}).pop(entry.entry_id, None)
     # Remove the shared service only once the last entry is gone.
     async_unregister_search_service(hass)

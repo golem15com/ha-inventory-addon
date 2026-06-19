@@ -1,0 +1,28 @@
+# English "where is X" sentences for the offline WhereIsItem intent.
+#
+# The {item} slot is a free-text wildcard: whatever the user says after the
+# trigger phrase is captured verbatim and passed to the inventory search
+# (Typesense fuzzy-matches it). Matched in-process by the ConversationEntity via
+# hassil — NOT by the default agent (which only loads config/custom_sentences/).
+
+language: "en"
+
+intents:
+  WhereIsItem:
+    data:
+      - sentences:
+          - "where is {item}"
+          - "where is the {item}"
+          - "where are {item}"
+          - "where are the {item}"
+          - "where do I keep {item}"
+          - "where do I keep the {item}"
+          - "where did I put {item}"
+          - "where did I put the {item}"
+          - "where do I store {item}"
+          - "find {item}"
+          - "find the {item}"
+
+lists:
+  item:
+    wildcard: true
