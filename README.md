@@ -24,20 +24,23 @@ no `secrets.yaml`, no third-party conversation component.
 
 ## Mint a read token
 
-The integration authenticates with a personal **read** API token.
+The integration authenticates with a personal **read** API token, minted on **your own
+whereiput.it server**.
 
-1. Open your whereiput.it server's **Settings → Integrations** tab and create a token. On the
-   hosted service this is <https://whereiput.it/settings?tab=integrations> (the SPA / token-minting
-   UI lives on the **apex** `whereiput.it`); on a self-hosted server it is the same path on your own
-   host.
+1. Open your server's **Settings → Integrations** tab — on a default self-host this is
+   <http://localhost:8088/settings?tab=integrations> (or the same path on whatever IP/hostname your
+   server runs on, e.g. `http://192.168.1.50:8088/settings?tab=integrations`). It's the **same base
+   URL you'll give the integration**, just with the `/settings?tab=integrations` page open.
 2. Create a token: name it `Home Assistant`, **scope `read`** — voice search never needs
    write or AI scope.
 3. Copy the `inv_…` secret. It is shown **only once**.
 
-> **Hosted service: two hosts, by design.** If you point the integration at the hosted SaaS, you
-> *mint* the token on the apex `whereiput.it`, but the integration *talks to* the token API on
-> **`api.whereiput.it`**. Set the Base URL to `https://api.whereiput.it` in that case and make sure
-> your Home Assistant host can reach it (outbound 443).
+> **Using the hosted SaaS instead of self-hosting?** On the hosted service the two roles live on
+> two hosts: you *mint* the token on the apex <https://whereiput.it/settings?tab=integrations>, but
+> the integration *talks to* the token API on **`api.whereiput.it`**. In that case set the Base URL
+> to `https://api.whereiput.it` and make sure your Home Assistant host can reach it (outbound 443).
+> On a self-hosted server there is just **one** host — the same origin serves both the settings page
+> and the API.
 
 ## Set it up
 
@@ -92,10 +95,12 @@ pieces. **The integration is the single supported path going forward.**
 
 ## Verify
 
-1. **API smoke test** (no Home Assistant needed) — confirms the token + endpoint are live:
+1. **API smoke test** (no Home Assistant needed) — confirms the token + endpoint are live. Use the
+   **same Base URL you configured** (your self-hosted server below, or `https://api.whereiput.it`
+   for the hosted service):
    ```bash
    curl -H "Authorization: Bearer inv_<your_read_token>" \
-     "https://api.whereiput.it/api/v1/inventory/items/search?q=mlotek"
+     "http://localhost:8088/api/v1/inventory/items/search?q=mlotek"
    ```
    Expect JSON with `data[].location.name` and `data[].area.name`.
 2. **Service** — in Home Assistant, **Developer Tools → Actions**, choose
