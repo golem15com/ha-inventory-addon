@@ -6,6 +6,7 @@ hass.data[DOMAIN][entry.entry_id] and async_unload_entry pops it again.
 """
 
 from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
 from custom_components.whereiput_inventory.api import InventoryClient
 from custom_components.whereiput_inventory.const import (
@@ -18,6 +19,12 @@ from custom_components.whereiput_inventory.const import (
 async def test_setup_entry_stores_client_then_unload_pops(hass: HomeAssistant) -> None:
     """Setup stores a client per entry_id; unload removes it."""
     from pytest_homeassistant_custom_component.common import MockConfigEntry
+
+    # The manifest declares dependencies: ["conversation"]; set it up (and its
+    # own homeassistant dep) before the entry so HA can resolve the dep tree.
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "conversation", {})
+    await hass.async_block_till_done()
 
     entry = MockConfigEntry(
         domain=DOMAIN,

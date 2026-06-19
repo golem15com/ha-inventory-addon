@@ -1,6 +1,45 @@
 """The whereiput.it Inventory integration.
 
-Wave 1 (Plan 02) ships only the InventoryClient, constants and exceptions.
-The HA entry-point (async_setup_entry / async_unload_entry) and the config flow,
-options flow, LLM tool, conversation entity and service are built in Plans 03/04.
+Plan 03 ships the entry-point skeleton: ``async_setup_entry`` builds an
+``InventoryClient`` from the config entry and stores it per ``entry_id`` under
+``hass.data[DOMAIN]``; ``async_unload_entry`` removes it. Plan 04 wires the
+service, LLM tool and conversation entity onto the per-entry client at the
+``# surfaces registered in Plan 04`` anchor below.
 """
+
+from __future__ import annotations
+
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+
+from .api import InventoryClient
+from .const import CONF_BASE_URL, CONF_TOKEN, DOMAIN
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Build the per-entry InventoryClient and stash it under hass.data."""
+    client = InventoryClient(
+        async_get_clientsession(hass),
+        entry.data[CONF_BASE_URL],
+        entry.data[CONF_TOKEN],
+    )
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {"client": client}
+
+    # Reload the entry when its options (e.g. the area filter) change.
+    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
+
+    # surfaces registered in Plan 04 (service, LLM tool, conversation entity)
+
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Drop the per-entry client on unload."""
+    hass.data.get(DOMAIN, {}).pop(entry.entry_id, None)
+    return True
+
+
+async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Reload the entry when options change so the new filter takes effect."""
+    await hass.config_entries.async_reload(entry.entry_id)

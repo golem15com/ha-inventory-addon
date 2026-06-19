@@ -10,6 +10,10 @@ Asserts every <behavior> bullet of Plan 03 Task 1:
 - an identical pair aborts as already_configured (unique_id de-dupe, token hashed).
 """
 
+from unittest.mock import patch
+
+import pytest
+
 from aiohttp import ClientError
 
 from homeassistant import config_entries, data_entry_flow
@@ -19,6 +23,28 @@ from custom_components.whereiput_inventory import config_flow  # noqa: F401
 from custom_components.whereiput_inventory.const import CONF_BASE_URL, CONF_TOKEN, DOMAIN
 
 from .conftest import SEARCH_URL, mock_search_response
+
+
+@pytest.fixture(autouse=True)
+async def _bypass_entry_setup(hass):
+    """Test the flow in isolation — don't run the real entry setup.
+
+    ``async_setup_entry`` is patched to True (the canonical HA config-flow
+    pattern: the flow's own logic — validate-on-connect, errors, unique_id — is
+    what we assert, not entry setup). The ``homeassistant`` component is set up
+    first so that when creating an entry resolves the manifest ``conversation``
+    dependency, its default agent finds ``homeassistant.exposed_entities`` and
+    starts without a KeyError. Pure test-harness plumbing.
+    """
+    from homeassistant.setup import async_setup_component
+
+    await async_setup_component(hass, "homeassistant", {})
+    await hass.async_block_till_done()
+    with patch(
+        "custom_components.whereiput_inventory.async_setup_entry",
+        return_value=True,
+    ):
+        yield
 
 
 async def test_user_step_shows_form(hass: HomeAssistant) -> None:

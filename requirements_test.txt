@@ -8,3 +8,8 @@ pytest
 pytest-homeassistant-custom-component==0.13.339
 pytest-asyncio
 aioresponses
+# The manifest declares dependencies: ["conversation"]; setting that component
+# up during tests (config-flow entry creation, __init__ setup) needs hassil +
+# the bundled intents package, which PHACC does not pull in transitively.
+hassil
+home-assistant-intents
