@@ -103,6 +103,18 @@ async def test_options_flow_areas_error_surfaces_form(
     assert result["errors"]["base"] == "cannot_connect"
 
 
+async def test_options_flow_revoked_token_surfaces_invalid_auth(
+    hass: HomeAssistant, mock_aiohttp
+) -> None:
+    """A revoked token (401) surfaces invalid_auth, not cannot_connect (WR-03)."""
+    entry = _entry(hass)
+    mock_aiohttp.get(AREAS_URL, status=401)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["errors"]["base"] == "invalid_auth"
+
+
 def test_options_flow_does_not_assign_config_entry() -> None:
     """The OptionsFlow must not set self.config_entry (provided by HA)."""
     import inspect

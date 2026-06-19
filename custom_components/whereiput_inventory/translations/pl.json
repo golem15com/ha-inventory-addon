@@ -30,7 +30,8 @@
       }
     },
     "error": {
-      "cannot_connect": "Nie można połączyć się z serwerem."
+      "cannot_connect": "Nie można połączyć się z serwerem.",
+      "invalid_auth": "Nieprawidłowy token."
     }
   },
   "services": {
@@ -41,6 +42,10 @@
         "q": {
           "name": "Zapytanie",
           "description": "Nazwa rzeczy do wyszukania."
+        },
+        "per_page": {
+          "name": "Wyników na obszar",
+          "description": "Maksymalna liczba zwracanych pozycji (na obszar przy wyszukiwaniu wieloobszarowym)."
         }
       }
     }

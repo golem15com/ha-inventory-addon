@@ -14,6 +14,7 @@ Security invariants:
 from __future__ import annotations
 
 import asyncio
+import json
 from typing import Any
 
 from aiohttp import ClientError, ClientSession
@@ -67,16 +68,17 @@ class InventoryClient:
             )
 
         # Multi-area: the server reads a single int, so fan out and merge.
+        # meta.total is aggregated across areas (last-wins would mis-report it).
         merged: list[Any] = []
-        meta: dict[str, Any] = {}
+        total = 0
         for area_id in areas:
             params = {**base_params, "area": area_id}
             result = await self._get(
                 f"{self._base}/api/v1/inventory/items/search", params=params
             )
             merged.extend(result.get("data", []))
-            meta = result.get("meta", meta)
-        return {"data": merged, "meta": meta}
+            total += result.get("meta", {}).get("total", 0)
+        return {"data": merged, "meta": {"total": total}}
 
     async def areas(self) -> dict[str, Any]:
         """Return the token's accessible areas: {data:[{id,name,is_owner}]}."""
@@ -95,6 +97,9 @@ class InventoryClient:
                         raise InvalidAuth
                     if resp.status != 200:
                         raise CannotConnect(resp.status)
+                    # A 200 with a non-JSON body (e.g. SPA HTML when the Base URL
+                    # points at the web-UI host instead of the API host) means we
+                    # reached the wrong endpoint — treat it as CannotConnect.
                     return await resp.json()
-        except (ClientError, asyncio.TimeoutError) as err:
+        except (ClientError, asyncio.TimeoutError, json.JSONDecodeError) as err:
             raise CannotConnect from err

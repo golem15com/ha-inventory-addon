@@ -30,7 +30,8 @@
       }
     },
     "error": {
-      "cannot_connect": "Could not reach the server."
+      "cannot_connect": "Could not reach the server.",
+      "invalid_auth": "Invalid token."
     }
   },
   "services": {
@@ -41,6 +42,10 @@
         "q": {
           "name": "Query",
           "description": "Item name to search for."
+        },
+        "per_page": {
+          "name": "Results per area",
+          "description": "Maximum number of items to return (per area for multi-area searches)."
         }
       }
     }

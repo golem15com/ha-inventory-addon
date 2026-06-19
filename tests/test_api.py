@@ -119,6 +119,21 @@ async def test_search_network_error_raises_cannot_connect(
         await client.search("młotek")
 
 
+async def test_search_200_non_json_body_raises_cannot_connect(
+    client, mock_aiohttp
+) -> None:
+    """A 200 with an HTML/non-JSON body (wrong host — SPA instead of API)
+    must map to CannotConnect, not propagate a raw JSONDecodeError (WR-02)."""
+    mock_aiohttp.get(
+        SEARCH_URL,
+        status=200,
+        body="<!DOCTYPE html><html><body>SPA</body></html>",
+        content_type="text/html",
+    )
+    with pytest.raises(CannotConnect):
+        await client.search("młotek")
+
+
 # --- areas() --------------------------------------------------------------
 
 async def test_areas_returns_contract_shape(client, mock_aiohttp) -> None:

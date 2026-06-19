@@ -28,10 +28,14 @@ REQUIRED_KEY_PATHS = {
     "config.abort.already_configured",
     "options.step.init.title",
     "options.step.init.data.areas",
+    "options.error.cannot_connect",
+    "options.error.invalid_auth",
     "services.search.name",
     "services.search.description",
     "services.search.fields.q.name",
     "services.search.fields.q.description",
+    "services.search.fields.per_page.name",
+    "services.search.fields.per_page.description",
 }
 
 

@@ -168,9 +168,12 @@ class WhereIPutOptionsFlow(config_entries.OptionsFlow):
         )
         try:
             areas = await client.areas()
-        except (CannotConnect, InvalidAuth):
+        except CannotConnect:
             # Surface a form error instead of crashing the options dialog.
             errors["base"] = "cannot_connect"
+        except InvalidAuth:
+            # A revoked/invalid token must say so, not "could not reach server".
+            errors["base"] = "invalid_auth"
         else:
             options = {area["id"]: area["name"] for area in areas.get("data", [])}
 

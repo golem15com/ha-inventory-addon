@@ -1,13 +1,13 @@
 {
   "domain": "whereiput_inventory",
   "name": "whereiput.it Inventory",
-  "version": "1.0.1",
-  "documentation": "https://github.com/golem15com/ha-inventory-addon",
-  "issue_tracker": "https://github.com/golem15com/ha-inventory-addon/issues",
   "codeowners": ["@golem15com"],
-  "iot_class": "cloud_polling",
-  "integration_type": "service",
   "config_flow": true,
   "dependencies": ["conversation"],
-  "requirements": []
+  "documentation": "https://github.com/golem15com/ha-inventory-addon",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/golem15com/ha-inventory-addon/issues",
+  "requirements": [],
+  "version": "1.0.1"
 }
